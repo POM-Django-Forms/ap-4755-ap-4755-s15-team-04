@@ -1,50 +1,47 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
-from authentication.models import CustomUser
+from .models import CustomUser
+from .forms import RegisterForm, LoginForm  # Наші нові форми
+
 
 def register_view(request):
-    error = None
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        first_name = request.POST.get('first_name', '')
-        last_name = request.POST.get('last_name', '')
-        role = request.POST.get('role', 0)
-
-        if not email or not password:
-            error = "Будь ласка, заповніть усі обов'язкові поля."
-        elif CustomUser.objects.filter(email=email).exists():
-            error = "Користувач з таким Email вже існує."
-        else:
+        form = RegisterForm(request.POST)
+        if form.is_valid():
             user = CustomUser.objects.create_user(
-                email=email,
-                password=password,
-                first_name=first_name,
-                last_name=last_name,
-                role=int(role)
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name'],
+                role=int(form.cleaned_data['role'])
             )
             login(request, user)
             return redirect('dashboard')
+    else:
+        form = RegisterForm()
 
-    return render(request, 'authentication/register.html', {'error': error})
+    return render(request, 'authentication/register.html', {'form': form})
 
 
 def login_view(request):
     error = None
     if request.method == 'POST':
-        email_input = request.POST.get('email')
-        password_input = request.POST.get('password')
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            email_input = form.cleaned_data['email']
+            password_input = form.cleaned_data['password']
 
-        user = authenticate(request, username=email_input, password=password_input)
+            user = authenticate(request, username=email_input, password=password_input)
+            if user is not None:
+                login(request, user)
+                return redirect('dashboard')
+            else:
+                error = "Невірний Email або пароль."
+    else:
+        form = LoginForm()
 
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard')
-        else:
-            error = "Невірний Email або пароль."
-
-    return render(request, 'authentication/login.html', {'error': error})
+    return render(request, 'authentication/login.html', {'form': form, 'error': error})
 
 
 def logout_view(request):
@@ -54,5 +51,4 @@ def logout_view(request):
 
 @login_required(login_url='login')
 def dashboard_view(request):
-
     return render(request, 'authentication/dashboard.html')

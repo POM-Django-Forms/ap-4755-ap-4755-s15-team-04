@@ -7,40 +7,25 @@
 <body>
     <h2>Реєстрація нового користувача</h2>
 
-    {% if error %}
-        <p style="color: red; font-weight: bold;">{{ error }}</p>
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+            <p style="color: red; font-weight: bold;">{{ error }}</p>
+        {% endfor %}
     {% endif %}
 
     <form method="post">
         {% csrf_token %}
 
-        <p>
-            <label for="email">Email (Обов'язково):</label><br>
-            <input type="email" id="email" name="email" required placeholder="example@mail.com">
-        </p>
+        {% for field in form %}
+            <p>
+                <label for="{{ field.id_for_label }}">{{ field.label }}:</label><br>
+                {{ field }}
 
-        <p>
-            <label for="password">Пароль (Обов'язково):</label><br>
-            <input type="password" id="password" name="password" required placeholder="Введіть пароль">
-        </p>
-
-        <p>
-            <label for="first_name">Ім'я:</label><br>
-            <input type="text" id="first_name" name="first_name" placeholder="Ваше ім'я">
-        </p>
-
-        <p>
-            <label for="last_name">Прізвище:</label><br>
-            <input type="text" id="last_name" name="last_name" placeholder="Ваше прізвище">
-        </p>
-
-        <p>
-            <label for="role">Оберіть роль у системі:</label><br>
-            <select id="role" name="role">
-                <option value="0">Звичайний користувач (Гість)</option>
-                <option value="1">Бібліотекар (Адміністратор)</option>
-            </select>
-        </p>
+                {% if field.errors %}
+                    <br><span style="color: red; font-size: 0.85em;">{{ field.errors.0 }}</span>
+                {% endif %}
+            </p>
+        {% endfor %}
 
         <button type="submit">Зареєструватися</button>
     </form>

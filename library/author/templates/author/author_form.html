@@ -19,18 +19,18 @@
     <h2>Новий автор</h2>
     <form method="POST">
         {% csrf_token %}
-        <div class="field">
-            <label>Ім'я:</label>
-            <input type="text" name="name" required>
-        </div>
-        <div class="field">
-            <label>Прізвище:</label>
-            <input type="text" name="surname" required>
-        </div>
-        <div class="field">
-            <label>По батькові (необов'язково):</label>
-            <input type="text" name="patronymic">
-        </div>
+
+        {% for field in form %}
+            <div class="field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}:</label>
+                {{ field }}
+
+                {% if field.errors %}
+                    <span style="color: red; font-size: 0.85em; display: block; mt-1;">{{ field.errors.0 }}</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+
         <button type="submit" class="btn">Зберегти</button>
     </form>
     <a href="{% url 'authors_list' %}" class="back-link">← Назад до списку</a>

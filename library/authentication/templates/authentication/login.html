@@ -14,15 +14,16 @@
     <form method="post">
         {% csrf_token %}
 
-        <p>
-            <label for="email">Логін або Email:</label><br>
-            <input type="text" id="email" name="email" required placeholder="Введіть логін або email">
-        </p>
+        {% for field in form %}
+            <p>
+                <label for="{{ field.id_for_label }}">{{ field.label }}:</label><br>
+                {{ field }}
 
-        <p>
-            <label for="password">Пароль:</label><br>
-            <input type="password" id="password" name="password" required placeholder="Введіть пароль">
-        </p>
+                {% if field.errors %}
+                    <br><span style="color: red; font-size: 0.85em;">{{ field.errors.0 }}</span>
+                {% endif %}
+            </p>
+        {% endfor %}
 
         <button type="submit">Увійти</button>
     </form>
