@@ -1,98 +1,69 @@
-from datetime import timedelta
-
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
+from .forms import OrderCreateForm, OrderEditForm
 from .models import Order
 from book.models import Book
 
 
 def orders_list(request):
-    """
-    Show all orders (librarian).
-    """
     orders = Order.objects.all()
-
-    return render(
-        request,
-        "order/list.html",
-        {"orders": orders}
-    )
+    return render(request, "order/list.html", {"orders": orders})
 
 
 @login_required
 def my_orders(request):
-    """
-    Show orders of current user.
-    """
-    orders = Order.objects.filter(
-        user=request.user
-    )
-
-    return render(
-        request,
-        "order/my_orders.html",
-        {"orders": orders}
-    )
+    orders = Order.objects.filter(user=request.user)
+    return render(request, "order/my_orders.html", {"orders": orders})
 
 
 def user_orders(request, user_id):
-    """
-    Show all books provided to a specific user (by id).
-    """
-    orders = Order.objects.filter(
-        user_id=user_id
-    )
-
-    return render(
-        request,
-        "order/list.html",
-        {"orders": orders}
-    )
+    orders = Order.objects.filter(user_id=user_id)
+    return render(request, "order/list.html", {"orders": orders})
 
 
 @login_required
 def create_order(request, book_id):
-    """
-    Create new order.
-    """
-    if request.method == "POST":
+    book = get_object_or_404(Book, id=book_id)
 
-        book = Book.get_by_id(book_id)
+    if request.method == 'POST':
+        form = OrderCreateForm(request.POST)
+        if form.is_valid():
+            Order.create(
+                user=request.user,
+                book=book,
+                plated_end_at=form.cleaned_data['plated_end_at']
+            )
+            return redirect('my_orders')
+    else:
+        form = OrderCreateForm()
 
-        if not book:
-            return redirect("books_list")
+    return render(request, 'order/order_form.html', {'form': form, 'book': book})
 
-        planned_date = (
-            timezone.now() +
-            timedelta(days=14)
-        )
 
-        Order.create(
-            user=request.user,
-            book=book,
-            plated_end_at=planned_date
-        )
+@login_required
+def edit_order(request, id):
+    order = get_object_or_404(Order, id=id)
 
-        return redirect("my_orders")
+    if request.method == 'POST':
+        form = OrderEditForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            return redirect('orders_list')
+    else:
+        form = OrderEditForm(instance=order)
 
-    return redirect("books_list")
+    return render(request, 'order/order_form.html', {'form': form, 'order': order})
 
 
 @login_required
 def close_order(request, id):
-    """
-    Close order and return book.
-    """
     order = Order.get_by_id(id)
 
     if order:
-        order.update(
-            end_at=timezone.now()
-        )
-
+        order.update(end_at=timezone.now())
         order.book.count += 1
         order.book.save()
 
-    return redirect("orders_list")
+    return redirect('orders_list')
