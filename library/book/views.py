@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import Book
 from order.models import Order
@@ -41,6 +42,7 @@ def user_books(request, user_id):
     return render(request, "book/user_books.html", {"books": books})
 
 
+@csrf_exempt
 def book_create(request):
     if request.method == 'POST':
         form = BookForm(request.POST)
@@ -52,6 +54,7 @@ def book_create(request):
     return render(request, 'book/book_form.html', {'form': form})
 
 
+@csrf_exempt
 def book_edit(request, id):
     book = get_object_or_404(Book, id=id)
     if request.method == 'POST':

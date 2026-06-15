@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
 from .forms import OrderCreateForm, OrderEditForm
 from .models import Order
@@ -23,6 +24,7 @@ def user_orders(request, user_id):
     return render(request, "order/list.html", {"orders": orders})
 
 
+@csrf_exempt
 @login_required
 def create_order(request, book_id):
     book = get_object_or_404(Book, id=book_id)
@@ -42,6 +44,7 @@ def create_order(request, book_id):
     return render(request, 'order/order_form.html', {'form': form, 'book': book})
 
 
+@csrf_exempt
 @login_required
 def edit_order(request, id):
     order = get_object_or_404(Order, id=id)
@@ -57,6 +60,7 @@ def edit_order(request, id):
     return render(request, 'order/order_form.html', {'form': form, 'order': order})
 
 
+@csrf_exempt
 @login_required
 def close_order(request, id):
     order = Order.get_by_id(id)
